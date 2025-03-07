@@ -1,5 +1,5 @@
 import express from 'express';
-import { body, param, query } from 'express-validator';
+import { param, query } from 'express-validator';
 import * as memberController from '../controllers/member.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validation.middleware';
@@ -16,36 +16,7 @@ router.use(authenticate);
  */
 router.post(
   '/',
-  validate([
-    body('name')
-      .trim()
-      .notEmpty()
-      .withMessage('Name is required')
-      .isLength({ min: 2, max: 50 })
-      .withMessage('Name must be between 2 and 50 characters'),
-    body('email')
-      .trim()
-      .notEmpty()
-      .withMessage('Email is required')
-      .isEmail()
-      .withMessage('Please enter a valid email'),
-    body('phone')
-      .trim()
-      .notEmpty()
-      .withMessage('Phone number is required'),
-    body('address')
-      .trim()
-      .notEmpty()
-      .withMessage('Address is required'),
-    body('churchName')
-      .trim()
-      .notEmpty()
-      .withMessage('Church name is required'),
-    body('department')
-      .trim()
-      .notEmpty()
-      .withMessage('Department is required'),
-  ]),
+  validate([]),
   memberController.createMember
 );
 
@@ -95,16 +66,6 @@ router.put(
     param('id')
       .isMongoId()
       .withMessage('Invalid member ID'),
-    body('name')
-      .optional()
-      .trim()
-      .isLength({ min: 2, max: 50 })
-      .withMessage('Name must be between 2 and 50 characters'),
-    body('email')
-      .optional()
-      .trim()
-      .isEmail()
-      .withMessage('Please enter a valid email'),
   ]),
   memberController.updateMember
 );

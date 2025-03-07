@@ -1,5 +1,4 @@
 import express from 'express';
-import { body } from 'express-validator';
 import * as authController from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validation.middleware';
@@ -15,26 +14,7 @@ const router = express.Router();
 router.post(
   '/signup',
   upload.single('profilePic'),
-  validate([
-    body('name')
-      .trim()
-      .notEmpty()
-      .withMessage('Name is required')
-      .isLength({ min: 2, max: 50 })
-      .withMessage('Name must be between 2 and 50 characters'),
-    body('email')
-      .trim()
-      .notEmpty()
-      .withMessage('Email is required')
-      .isEmail()
-      .withMessage('Please enter a valid email'),
-    body('password')
-      .trim()
-      .notEmpty()
-      .withMessage('Password is required')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters long'),
-  ]),
+  validate([]),
   authController.signup
 );
 
@@ -45,18 +25,7 @@ router.post(
  */
 router.post(
   '/login',
-  validate([
-    body('email')
-      .trim()
-      .notEmpty()
-      .withMessage('Email is required')
-      .isEmail()
-      .withMessage('Please enter a valid email'),
-    body('password')
-      .trim()
-      .notEmpty()
-      .withMessage('Password is required'),
-  ]),
+  validate([]),
   authController.login
 );
 

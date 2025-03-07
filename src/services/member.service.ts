@@ -15,21 +15,28 @@ import logger from '../utils/logger';
  * @returns Created member
  */
 export const createNewMember = async (
-  memberData: IMemberRequest,
-  userId: Types.ObjectId | string
-): Promise<IMemberResponse> => {
-  // Create member data object
-  const memberObj: Partial<IMember> = {
-    ...memberData,
-    position: memberData.position || 'Member',
-    dateJoined: memberData.dateJoined || new Date(),
-    createdBy: new Types.ObjectId(userId),
-  };
-
-  // Create new member
-  const member = await Member.create(memberObj);
-
-  return member.toObject();
+    memberData: IMemberRequest,
+    userId: Types.ObjectId | string
+  ): Promise<IMemberResponse> => {
+    const member = await Member.create({
+      ...memberData,
+      createdBy: new Types.ObjectId(userId),
+    });
+  
+    return {
+      _id: member._id.toString(), // Cast _id to string
+      name: member.name,
+      email: member.email,
+      phone: member.phone,
+      address: member.address,
+      churchName: member.churchName,
+      department: member.department,
+      position: member.position,
+      dateJoined: member.dateJoined,
+      createdBy: member.createdBy.toString(), // Cast createdBy to string
+      createdAt: member.createdAt,
+      updatedAt: member.updatedAt,
+    };
 };
 
 /**
