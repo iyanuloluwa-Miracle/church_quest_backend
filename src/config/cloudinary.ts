@@ -9,39 +9,51 @@ cloudinary.config({
   api_secret: environment.cloudinary.apiSecret,
 });
 
-/**
- * Upload file to Cloudinary
- * @param filePath - Path to the file to upload
- * @param folder - Folder to upload the file to
- * @returns Cloudinary upload result
- */
+interface UploadApiResponse {
+  public_id: string;
+  version: number;
+  signature: string;
+  width: number;
+  height: number;
+  format: string;
+  resource_type: string;
+  created_at: string;
+  tags: string[];
+  bytes: number;
+  type: string;
+  etag: string;
+  placeholder: boolean;
+  url: string;
+  secure_url: string;
+  original_filename: string;
+}
+
+interface DeleteApiResponse {
+  result: string;
+}
+
 export const uploadToCloudinary = async (
   filePath: string,
   folder: string = 'profile-pics'
-): Promise<cloudinary.UploadApiResponse> => {
+): Promise<UploadApiResponse> => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
       folder,
       resource_type: 'auto',
     });
-    return result;
+    return result as UploadApiResponse;
   } catch (error) {
     logger.error('Cloudinary upload error:', error);
     throw new Error('File upload failed');
   }
 };
 
-/**
- * Delete file from Cloudinary
- * @param publicId - Public ID of the file to delete
- * @returns Cloudinary deletion result
- */
 export const deleteFromCloudinary = async (
   publicId: string
-): Promise<cloudinary.DeleteApiResponse> => {
+): Promise<DeleteApiResponse> => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
-    return result;
+    return result as DeleteApiResponse;
   } catch (error) {
     logger.error('Cloudinary delete error:', error);
     throw new Error('File deletion failed');

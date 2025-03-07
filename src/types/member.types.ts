@@ -41,4 +41,4 @@ export interface IMemberRequest {
   export interface IMembersResponse {
     members: IMemberResponse[];
     pagination: IPaginationResponse;
-  }
+}
