@@ -31,8 +31,8 @@ export const authenticate = async (
 
     const token = authHeader.split(' ')[1];
 
-    // Verify token
-    const decoded = jwt.verify(token, environment.jwtSecret) as { id: string };
+    // Verify token with proper type casting
+    const decoded = jwt.verify(token, environment.jwtSecret as jwt.Secret) as { id: string };
 
     // Find user by id
     const user = await User.findById(decoded.id).select('-password');

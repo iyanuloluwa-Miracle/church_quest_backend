@@ -14,9 +14,15 @@ const router = express.Router();
 router.post(
   '/signup',
   upload.single('profilePic'),
-  validate([]),
+  validate([
+    // Add your validation rules here
+    body('name').notEmpty().withMessage('Name is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  ]),
   authController.signup
 );
+
 
 /**
  * @route   POST /api/auth/login

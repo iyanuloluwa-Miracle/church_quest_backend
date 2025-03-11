@@ -1,3 +1,4 @@
+import express from 'express';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/user.model';
@@ -52,9 +53,13 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     const user = await User.create(userData);
 
     // Generate JWT token
-    const token = jwt.sign({ id: user._id }, environment.jwtSecret, {
-      expiresIn: environment.jwtExpiresIn,
-    });
+    const token = jwt.sign(
+      { id: user._id }, 
+      environment.jwtSecret as jwt.Secret, 
+      {
+        expiresIn: environment.jwtExpiresIn,
+      }
+    );
 
     // Return user data (excluding password)
     const userResponse = {
