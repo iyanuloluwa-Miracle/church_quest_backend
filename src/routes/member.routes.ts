@@ -1,8 +1,13 @@
 import express from 'express';
-import { param, query } from 'express-validator';
-import * as memberController from '../controllers/member.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validation.middleware';
+import { 
+  createMember,
+  getMembers,
+  getMemberById,
+  updateMember,
+  deleteMember 
+} from '../controllers/member.controller';
 
 const router = express.Router();
 
@@ -16,8 +21,15 @@ router.use(authenticate);
  */
 router.post(
   '/',
-  validate([]),
-  memberController.createMember
+  validate([
+    { field: 'firstName', required: true, type: 'string', minLength: 2, maxLength: 50, in: 'body' },
+    { field: 'lastName', required: true, type: 'string', minLength: 2, maxLength: 50, in: 'body' },
+    { field: 'email', required: true, type: 'email', in: 'body' },
+    { field: 'phone', required: true, type: 'string', minLength: 10, maxLength: 15, in: 'body' },
+    { field: 'address', required: true, type: 'string', minLength: 5, maxLength: 200, in: 'body' },
+    { field: 'dateOfBirth', required: true, type: 'string', in: 'body' }
+  ]),
+  createMember
 );
 
 /**
@@ -28,16 +40,10 @@ router.post(
 router.get(
   '/',
   validate([
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Page must be a positive integer'),
-    query('limit')
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage('Limit must be between 1 and 100'),
+    { field: 'page', type: 'number', min: 1, in: 'query' },
+    { field: 'limit', type: 'number', min: 1, max: 100, in: 'query' }
   ]),
-  memberController.getMembers
+  getMembers
 );
 
 /**
@@ -48,11 +54,9 @@ router.get(
 router.get(
   '/:id',
   validate([
-    param('id')
-      .isMongoId()
-      .withMessage('Invalid member ID'),
+    { field: 'id', required: true, type: 'string', in: 'params' }
   ]),
-  memberController.getMemberById
+  getMemberById
 );
 
 /**
@@ -63,11 +67,15 @@ router.get(
 router.put(
   '/:id',
   validate([
-    param('id')
-      .isMongoId()
-      .withMessage('Invalid member ID'),
+    { field: 'id', required: true, type: 'string', in: 'params' },
+    { field: 'firstName', type: 'string', minLength: 2, maxLength: 50, in: 'body' },
+    { field: 'lastName', type: 'string', minLength: 2, maxLength: 50, in: 'body' },
+    { field: 'email', type: 'email', in: 'body' },
+    { field: 'phone', type: 'string', minLength: 10, maxLength: 15, in: 'body' },
+    { field: 'address', type: 'string', minLength: 5, maxLength: 200, in: 'body' },
+    { field: 'dateOfBirth', type: 'string', in: 'body' }
   ]),
-  memberController.updateMember
+  updateMember
 );
 
 /**
@@ -78,11 +86,9 @@ router.put(
 router.delete(
   '/:id',
   validate([
-    param('id')
-      .isMongoId()
-      .withMessage('Invalid member ID'),
+    { field: 'id', required: true, type: 'string', in: 'params' }
   ]),
-  memberController.deleteMember
+  deleteMember
 );
 
 export default router;

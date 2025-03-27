@@ -1,5 +1,5 @@
 import express from 'express';
-import * as authController from '../controllers/auth.controller';
+import { signup, login, getProfile, logout } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validation.middleware';
 import { upload } from '../utils/upload';
@@ -15,14 +15,12 @@ router.post(
   '/signup',
   upload.single('profilePic'),
   validate([
-    // Add your validation rules here
-    body('name').notEmpty().withMessage('Name is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    { field: 'name', required: true, type: 'string', minLength: 2, maxLength: 50 },
+    { field: 'email', required: true, type: 'email' },
+    { field: 'password', required: true, type: 'string', minLength: 6, maxLength: 50 }
   ]),
-  authController.signup
+  signup
 );
-
 
 /**
  * @route   POST /api/auth/login
@@ -31,8 +29,11 @@ router.post(
  */
 router.post(
   '/login',
-  validate([]),
-  authController.login
+  validate([
+    { field: 'email', required: true, type: 'email' },
+    { field: 'password', required: true, type: 'string', minLength: 6 }
+  ]),
+  login
 );
 
 /**
@@ -40,13 +41,13 @@ router.post(
  * @desc    Get user profile
  * @access  Private
  */
-router.get('/profile', authenticate, authController.getProfile);
+router.get('/profile', authenticate, getProfile);
 
 /**
  * @route   POST /api/auth/logout
  * @desc    Logout user
  * @access  Private
  */
-router.post('/logout', authenticate, authController.logout);
+router.post('/logout', authenticate, logout);
 
 export default router;

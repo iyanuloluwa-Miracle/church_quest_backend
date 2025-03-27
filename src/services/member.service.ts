@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, Document } from 'mongoose';
 import { Member, IMember } from '../models/member.model';
 import { 
   IMemberRequest, 
@@ -8,6 +8,21 @@ import {
 } from '../types';
 import logger from '../utils/logger';
 
+const toMemberResponse = (member: IMember & Document): IMemberResponse => ({
+  _id: member._id.toString(),
+  name: member.name,
+  email: member.email,
+  phone: member.phone,
+  address: member.address,
+  churchName: member.churchName,
+  department: member.department,
+  position: member.position,
+  dateJoined: member.dateJoined,
+  createdBy: member.createdBy.toString(),
+  createdAt: member.createdAt,
+  updatedAt: member.updatedAt,
+});
+
 /**
  * Create a new member
  * @param memberData - Member data
@@ -15,28 +30,15 @@ import logger from '../utils/logger';
  * @returns Created member
  */
 export const createNewMember = async (
-    memberData: IMemberRequest,
-    userId: Types.ObjectId | string
-  ): Promise<IMemberResponse> => {
-    const member = await Member.create({
-      ...memberData,
-      createdBy: new Types.ObjectId(userId),
-    });
-  
-    return {
-      _id: member._id.toString(), // Cast _id to string
-      name: member.name,
-      email: member.email,
-      phone: member.phone,
-      address: member.address,
-      churchName: member.churchName,
-      department: member.department,
-      position: member.position,
-      dateJoined: member.dateJoined,
-      createdBy: member.createdBy.toString(), // Cast createdBy to string
-      createdAt: member.createdAt,
-      updatedAt: member.updatedAt,
-    };
+  memberData: IMemberRequest,
+  userId: Types.ObjectId | string
+): Promise<IMemberResponse> => {
+  const member = await Member.create({
+    ...memberData,
+    createdBy: new Types.ObjectId(userId),
+  });
+
+  return toMemberResponse(member);
 };
 
 /**
@@ -49,39 +51,37 @@ export const getFilteredMembers = async (
   userId: Types.ObjectId | string,
   options: IMemberQueryOptions
 ): Promise<IMembersResponse> => {
-  const page = options.page || 1;
-  const limit = options.limit || 10;
+  const { page = 1, limit = 10, churchName, search } = options;
   const skip = (page - 1) * limit;
 
   // Build query
-  const query: any = { createdBy: userId };
-  
-  // Add churchName filter if provided
-  if (options.churchName) {
-    query.churchName = options.churchName;
+  const query: any = { createdBy: new Types.ObjectId(userId) };
+  if (churchName) {
+    query.churchName = churchName;
+  }
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+      { phone: { $regex: search, $options: 'i' } },
+    ];
   }
 
-  // Add search filter if provided
-  if (options.search) {
-    query.$text = { $search: options.search };
-  }
+  // Execute query with pagination
+  const [members, total] = await Promise.all([
+    Member.find(query).skip(skip).limit(limit),
+    Member.countDocuments(query),
+  ]);
 
-  // Get total count
-  const total = await Member.countDocuments(query);
-
-  // Get members
-  const members = await Member.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const pages = Math.ceil(total / limit);
 
   return {
-    members: members.map(member => member.toObject()),
+    members: members.map(toMemberResponse),
     pagination: {
       page,
       limit,
       total,
-      pages: Math.ceil(total / limit),
+      pages,
     },
   };
 };
@@ -97,11 +97,11 @@ export const getMemberDetails = async (
   userId: Types.ObjectId | string
 ): Promise<IMemberResponse | null> => {
   const member = await Member.findOne({
-    _id: memberId,
-    createdBy: userId,
+    _id: new Types.ObjectId(memberId),
+    createdBy: new Types.ObjectId(userId),
   });
 
-  return member ? member.toObject() : null;
+  return member ? toMemberResponse(member) : null;
 };
 
 /**
@@ -117,12 +117,15 @@ export const updateMemberDetails = async (
   updateData: Partial<IMemberRequest>
 ): Promise<IMemberResponse | null> => {
   const member = await Member.findOneAndUpdate(
-    { _id: memberId, createdBy: userId },
+    {
+      _id: new Types.ObjectId(memberId),
+      createdBy: new Types.ObjectId(userId),
+    },
     { $set: updateData },
     { new: true }
   );
 
-  return member ? member.toObject() : null;
+  return member ? toMemberResponse(member) : null;
 };
 
 /**
@@ -136,8 +139,8 @@ export const deleteMember = async (
   userId: Types.ObjectId | string
 ): Promise<boolean> => {
   const result = await Member.deleteOne({
-    _id: memberId,
-    createdBy: userId,
+    _id: new Types.ObjectId(memberId),
+    createdBy: new Types.ObjectId(userId),
   });
 
   return result.deletedCount > 0;

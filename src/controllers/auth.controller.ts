@@ -1,6 +1,6 @@
 import express from 'express';
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 import { User, IUser } from '../models/user.model';
 import { environment } from '../config/environment';
 import { sendSuccess, sendError } from '../utils/response';
@@ -54,11 +54,9 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user._id }, 
-      environment.jwtSecret as jwt.Secret, 
-      {
-        expiresIn: environment.jwtExpiresIn,
-      }
+      { id: user._id },
+      environment.jwtSecret as Secret,
+      { expiresIn: '7d' }
     );
 
     // Return user data (excluding password)
@@ -103,9 +101,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Generate JWT token
-    const token = jwt.sign({ id: user._id }, environment.jwtSecret, {
-      expiresIn: environment.jwtExpiresIn,
-    });
+    const token = jwt.sign(
+      { id: user._id },
+      environment.jwtSecret as Secret,
+      { expiresIn: '7d' }
+    );
 
     // Return user data (excluding password)
     const userResponse = {
